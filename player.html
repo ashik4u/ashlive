@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live TV Player</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
+    <style>
+        body { background: #111; color: #fff; margin: 0; padding: 0; }
+        .player-container { max-width: 900px; margin: 40px auto; background: #222; border-radius: 12px; box-shadow: 0 8px 32px #0008; padding: 24px; }
+        .channel-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; }
+        .program-info { font-size: 1rem; opacity: 0.8; margin-bottom: 16px; }
+        .video-wrap { background: #000; border-radius: 8px; overflow: hidden; }
+        #mainVideo { width: 100%; height: 60vh; background: #000; }
+        .quality-select { margin-top: 12px; }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <div class="channel-title" id="mainChannelTitle">Loading...</div>
+        <div class="program-info" id="mainProgramInfo"></div>
+        <div class="video-wrap">
+            <video id="mainVideo" controls autoplay></video>
+        </div>
+        <div class="quality-select">
+            <label for="qualitySelect">Quality:</label>
+            <select id="qualitySelect"></select>
+        </div>
+    </div>
+    <script>
+    // Get stream id from URL
+    function getStreamId() {
+        const url = new URL(window.location.href);
+        return url.searchParams.get('stream') || 'sports1';
+    }
+    // Fetch channels.json and play the correct stream
+    let hlsInstance = null;
+    fetch('channels.json')
+        .then(r => r.json())
+        .then(channels => {
+            const streamId = getStreamId();
+            const channel = channels[streamId] || Object.values(channels)[0];
+            if (!channel) return;
+            document.getElementById('mainChannelTitle').textContent = channel.title;
+            document.getElementById('mainProgramInfo').textContent = channel.program;
+            const video = document.getElementById('mainVideo');
+            const qualitySelect = document.getElementById('qualitySelect');
+            let src = channel.src;
+            // If channel.qualities exists, use it
+            let qualities = [];
+            if (channel.qualities && Array.isArray(channel.qualities) && channel.qualities.length > 0) {
+                qualities = channel.qualities;
+            } else if (channel.src) {
+                qualities = [{ label: 'Auto', src: channel.src }];
+            }
+            // Populate quality selector
+            qualitySelect.innerHTML = '';
+            qualities.forEach((q, i) => {
+                const opt = document.createElement('option');
+                opt.value = q.src;
+                opt.textContent = q.label || `Quality ${i+1}`;
+                qualitySelect.appendChild(opt);
+            });
+            // Play selected quality
+            function playSrc(src) {
+                if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+                if (src.endsWith('.m3u8') && Hls.isSupported()) {
+                    hlsInstance = new Hls();
+                    hlsInstance.loadSource(src);
+                    hlsInstance.attachMedia(video);
+                } else {
+                    video.src = src;
+                }
+                video.play();
+            }
+            playSrc(qualities[0].src);
+            qualitySelect.onchange = function() {
+                playSrc(this.value);
+            };
+        });
+    </script>
+</body>
+</html>

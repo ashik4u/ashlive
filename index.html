@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Premium Live TV Streaming Service">
+    <!-- Using a placeholder for the favicon -->
+    <link rel="shortcut icon" href="https://placehold.co/16x16/000000/ffffff?text=Premium Live TV Streaming"/>
+    <title>Premium Live TV Streaming</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="background"></div>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="row g-4">
+            <!-- Player Column -->
+            <div class="col-lg-9 col-md-8">
+                <div class="player-section">
+                    <div class="embed-container" style="background:none; border-radius:0;">
+                        <video id="mainVideo" controls autoplay style="width:100%;height:100%;display:block;background:#000;border-radius:0;margin:0;padding:0;"></video>
+                        <div class="player-info">
+                            <div class="channel-title" id="mainChannelTitle">Sports Channel 1</div>
+                            <div class="program-info" id="mainProgramInfo">Live: Premier League Football</div>
+                            <div style="margin-top:8px;">
+                                <label for="qualitySelect" style="font-size:0.95em;opacity:0.8;">Quality:</label>
+                                <select id="qualitySelect" style="margin-left:6px;padding:2px 8px;border-radius:6px;font-size:0.95em;"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Channel List Column -->
+            <div class="col-lg-3 col-md-4">
+                <div class="channel-list">
+                    <ul class="nav nav-tabs" id="channelTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="local-tab" data-bs-toggle="tab" data-bs-target="#local" type="button" role="tab" aria-controls="local" aria-selected="true">Channels</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="external-tab" data-bs-toggle="tab" data-bs-target="#external" type="button" role="tab" aria-controls="external" aria-selected="false">Fancode</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="channelTabsContent" style="margin-top:10px;">
+                        <div class="tab-pane fade show active" id="local" role="tabpanel" aria-labelledby="local-tab">
+                            <div class="channel-list-header">
+                                <h2 class="channel-list-title">Channels</h2>
+                                <div class="channel-count" id="channelCount">0/250</div>
+                            </div>
+                            <div class="channel-grid">
+                                <div id="dynamicChannelGrid"></div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="external" role="tabpanel" aria-labelledby="external-tab">
+                            <div class="channel-list-header">
+                                <h2 class="channel-list-title">Fancode</h2>
+                                <div class="channel-count" id="externalChannelCount">0</div>
+                            </div>
+                            <div class="channel-grid">
+                                <div id="externalChannelGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div>
+            <img src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2Fsohag1192%2FLive-Tv-Server&label=&icon=github&color=%23198754&message=&style=flat&tz=UTC" alt="GitHub hits">
+        </div>
+        <div class="mt-2">
+            © Copyright 2013 Md Sohag Rana, Developed By: <a href="https://t.me/MdSohagRana" target="_blank">Md Sohag Rana</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Fetch channels from channels.json and render channel grid
+            function escapeHtml(text) {
+                var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+                return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            }
+            // Global variable to store loaded channels
+            let loadedChannels = {};
+            let loadedExternalChannels = {};
+
+            function renderChannelGrid(channels, gridId, countId, isExternal) {
+                const grid = document.getElementById(gridId);
+                if (!grid) return;
+                grid.innerHTML = '';
+                let channelKeys = [];
+                let channelCount = 0;
+                if (isExternal) {
+                    // Fancode: only show matches with a playable stream
+                    if (channels && Array.isArray(channels.matches)) {
+                        channelKeys = channels.matches
+                            .map((m, i) => ({match: m, idx: i}))
+                            .filter(obj => obj.match.adfree_url || obj.match.dai_url)
+                            .map(obj => obj.idx);
+                        channelCount = channelKeys.length;
+                    }
+                } else {
+                    channelKeys = channels && typeof channels === 'object' ? Object.keys(channels) : [];
+                    channelCount = channelKeys.length;
+                }
+                const countElem = document.getElementById(countId);
+                if (countElem) {
+                    countElem.textContent = isExternal ? channelCount : (channelCount + '/250');
+                }
+                if (channelCount === 0) {
+                    grid.innerHTML = '<div style="color:#fff;text-align:center;padding:20px;">No channels found.</div>';
+                    return;
+                }
+                let first = true;
+                let idx = 0;
+                for (const id of channelKeys) {
+                    let ch, channelName, thumb, programInfo;
+                    if (isExternal) {
+                        ch = channels.matches[id];
+                        channelName = escapeHtml(ch.title);
+                        thumb = ch.src ? ch.src : `https://placehold.co/420x300/000000/ffffff?text=LIVE%20TV`;
+                        programInfo = ch.event_name ? escapeHtml(ch.event_name) : '';
+                    } else {
+                        ch = channels[id];
+                        channelName = escapeHtml(ch.title);
+                        programInfo = escapeHtml(ch.program);
+                        thumb = `https://placehold.co/420x300/000000/ffffff?text=LIVE%20TV`;
+                    }
+                    const active = first && !isExternal ? 'active' : '';
+                    const div = document.createElement('div');
+                    div.className = `channel-item ${active}`;
+                    div.setAttribute('tabindex', idx+1);
+                    div.onclick = function(event) {
+                        if (isExternal) {
+                            setPlayerExternal(id);
+                        } else {
+                            changeChannel(id);
+                        }
+                    };
+                    div.innerHTML = `
+                        <img src="${thumb}" class="channel-thumbnail" alt="${channelName}">
+                        <div class="channel-name" style="font-size:0.92em;white-space:normal;line-height:1.2;min-height:2.2em;">${channelName}</div>
+                        ${isExternal && programInfo ? `<div style='font-size:0.8em;opacity:0.7;text-align:center;'>${programInfo}</div>` : ''}
+                    `;
+                    grid.appendChild(div);
+                    if (first && !isExternal) {
+                        setPlayer(id);
+                    }
+                    first = false;
+                    idx++;
+                }
+            }
+
+            // Load local channels
+            fetch('channels.json')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch channels.json');
+                    return response.json();
+                })
+                .then(channels => {
+                    loadedChannels = channels;
+                    renderChannelGrid(loadedChannels, 'dynamicChannelGrid', 'channelCount', false);
+                })
+                .catch(err => {
+                    console.error('Error loading channels.json:', err);
+                    const countElem = document.getElementById('channelCount');
+                    if (countElem) countElem.textContent = '0/250';
+                });
+
+            // Load external channels
+            fetch('https://raw.githubusercontent.com/IPTVFlixBD/Fancode-BD/refs/heads/main/data.json')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch external data.json');
+                    return response.json();
+                })
+                .then(channels => {
+                    loadedExternalChannels = channels;
+                    renderChannelGrid(loadedExternalChannels, 'externalChannelGrid', 'externalChannelCount', true);
+                })
+                .catch(err => {
+                    console.error('Error loading external data.json:', err);
+                    const countElem = document.getElementById('externalChannelCount');
+                    if (countElem) countElem.textContent = '0';
+                });
+
+            // Set player for external channels
+            function setPlayerExternal(streamId) {
+                if (!loadedExternalChannels || !loadedExternalChannels.matches) return;
+                const match = loadedExternalChannels.matches[streamId];
+                if (!match) return;
+                const video = document.getElementById('mainVideo');
+                const qualitySelect = document.getElementById('qualitySelect');
+                // Prefer adfree_url, then dai_url, else none
+                let src = match.adfree_url || match.dai_url || '';
+                if (hlsInstance) {
+                    hlsInstance.destroy();
+                    hlsInstance = null;
+                }
+                qualitySelect.style.display = 'none';
+                if (src && src.endsWith('.m3u8')) {
+                    if (Hls.isSupported()) {
+                        hlsInstance = new Hls();
+                        hlsInstance.loadSource(src);
+                        hlsInstance.attachMedia(video);
+                        hlsInstance.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
+                            qualitySelect.innerHTML = '';
+                            const levels = hlsInstance.levels;
+                            const autoOpt = document.createElement('option');
+                            autoOpt.value = '-1';
+                            autoOpt.textContent = 'Auto';
+                            qualitySelect.appendChild(autoOpt);
+                            levels.forEach((level, i) => {
+                                const opt = document.createElement('option');
+                                opt.value = i;
+                                let label = '';
+                                if (level.height) label = level.height + 'p';
+                                else if (level.bitrate) label = Math.round(level.bitrate/1000) + 'kbps';
+                                else label = 'Quality ' + (i+1);
+                                opt.textContent = label;
+                                qualitySelect.appendChild(opt);
+                            });
+                            qualitySelect.style.display = '';
+                            qualitySelect.value = '-1';
+                            qualitySelect.onchange = function() {
+                                hlsInstance.currentLevel = parseInt(this.value, 10);
+                            };
+                        });
+                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        video.src = src;
+                    } else {
+                        video.src = src;
+                    }
+                } else {
+                    video.src = src;
+                }
+                document.getElementById('mainChannelTitle').textContent = match.title;
+                document.getElementById('mainProgramInfo').textContent = match.event_name || '';
+            }
+        </script>
+    <script>
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        // Check for saved theme preference or use preferred color scheme
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        if (savedTheme === 'light') {
+            body.classList.add('light-theme');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('light-theme');
+            const isLight = body.classList.contains('light-theme');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            themeToggle.innerHTML = isLight ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
+
+        // Use loadedChannels from channels.json
+
+        // Set video player using loadedChannels
+        let hlsInstance = null;
+        function setPlayer(streamId) {
+            if (!loadedChannels || !loadedChannels[streamId]) return;
+            const channel = loadedChannels[streamId];
+            const video = document.getElementById('mainVideo');
+            const qualitySelect = document.getElementById('qualitySelect');
+            let src = channel.src;
+            // Clean up previous hls.js instance
+            if (hlsInstance) {
+                hlsInstance.destroy();
+                hlsInstance = null;
+            }
+            // Hide quality selector by default
+            qualitySelect.style.display = 'none';
+            // If HLS is supported natively (Safari), use it; otherwise use hls.js
+            if (src && src.endsWith('.m3u8')) {
+                if (Hls.isSupported()) {
+                    hlsInstance = new Hls();
+                    hlsInstance.loadSource(src);
+                    hlsInstance.attachMedia(video);
+                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
+                        // Populate quality selector
+                        qualitySelect.innerHTML = '';
+                        const levels = hlsInstance.levels;
+                        // Add 'Auto' option
+                        const autoOpt = document.createElement('option');
+                        autoOpt.value = '-1';
+                        autoOpt.textContent = 'Auto';
+                        qualitySelect.appendChild(autoOpt);
+                        levels.forEach((level, i) => {
+                            const opt = document.createElement('option');
+                            opt.value = i;
+                            let label = '';
+                            if (level.height) label = level.height + 'p';
+                            else if (level.bitrate) label = Math.round(level.bitrate/1000) + 'kbps';
+                            else label = 'Quality ' + (i+1);
+                            opt.textContent = label;
+                            qualitySelect.appendChild(opt);
+                        });
+                        qualitySelect.style.display = '';
+                        qualitySelect.value = '-1';
+                        qualitySelect.onchange = function() {
+                            hlsInstance.currentLevel = parseInt(this.value, 10);
+                        };
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = src;
+                } else {
+                    video.src = src;
+                }
+            } else {
+                video.src = src;
+            }
+            document.getElementById('mainChannelTitle').textContent = channel.title;
+            document.getElementById('mainProgramInfo').textContent = channel.program;
+        }
+        // Channel Change Function
+        function changeChannel(streamId) {
+            setPlayer(streamId);
+            // Update active channel in the list
+            const items = document.querySelectorAll('.channel-item');
+            items.forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            // Smooth scroll to keep active channel in view (for mobile)
+            event.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            const items = document.querySelectorAll('.channel-item');
+            const currentActive = document.querySelector('.channel-item.active');
+            let currentIndex = Array.from(items).indexOf(currentActive);
+            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                currentIndex = (currentIndex - 1 + items.length) % items.length;
+            } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                currentIndex = (currentIndex + 1) % items.length;
+            } else if (e.key >= '1' && e.key <= '9') {
+                currentIndex = parseInt(e.key) - 1;
+                if (currentIndex >= items.length) currentIndex = items.length - 1;
+            } else {
+                return;
+            }
+            const nextItem = items[currentIndex];
+            const url = nextItem.getAttribute('onclick').match(/'([^']+)'/)[1];
+            let streamId = url.split('stream=')[1];
+            setPlayer(streamId);
+            items.forEach(item => item.classList.remove('active'));
+            nextItem.classList.add('active');
+            nextItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        // Remove initial setPlayer call; now handled after channels load
+    </script>
+</body>
+
+</html>
+
