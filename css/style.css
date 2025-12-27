@@ -202,24 +202,31 @@ a {
 
         /* Player Info */
         .player-info {
-            padding: 15px 20px;
-            background: linear-gradient(transparent, rgba(0,0,0,0.7));
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 10;
+            margin: 18px auto 0 auto;
+            padding: 18px 28px 16px 28px;
+            border-radius: 14px;
+            max-width: 600px;
+            position: static;
+            text-align: center;
+            transition: box-shadow 0.3s;
+        }
+        .player-info:hover {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.28);
         }
 
         .channel-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 5px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 7px;
+            color: #ffd700;
+            letter-spacing: 0.5px;
         }
 
         .program-info {
-            font-size: 0.9rem;
-            opacity: 0.8;
+            font-size: 1.05rem;
+            opacity: 0.92;
+            color: #fff;
+            margin-bottom: 8px;
         }
 
         /* Channel List */

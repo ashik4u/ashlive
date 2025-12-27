@@ -328,6 +328,17 @@
             }
             document.getElementById('mainChannelTitle').textContent = channel.title;
             document.getElementById('mainProgramInfo').textContent = channel.program;
+            // Update extra info section
+            document.getElementById('extraChannelName').textContent = channel.title || '-';
+            document.getElementById('extraProgramInfo').textContent = channel.program || 'No program info';
+            // Set quality info
+            let qualityText = 'Auto';
+            if (hlsInstance && hlsInstance.levels && hlsInstance.currentLevel >= 0) {
+                const level = hlsInstance.levels[hlsInstance.currentLevel];
+                if (level && level.height) qualityText = level.height + 'p';
+                else if (level && level.bitrate) qualityText = Math.round(level.bitrate/1000) + 'kbps';
+            }
+            document.getElementById('extraQuality').textContent = qualityText;
         }
         // Channel Change Function
         function changeChannel(streamId) {
