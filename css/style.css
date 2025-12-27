@@ -217,7 +217,7 @@ a {
         }
 
         .channel-title {
-            font-size: 1.5rem;
+            font-size: 1.0rem;
             font-weight: 700;
             margin-bottom: 7px;
             color: #ffd700;
@@ -225,7 +225,7 @@ a {
         }
 
         .program-info {
-            font-size: 1.05rem;
+            font-size: 1.0rem;
             opacity: 0.92;
             color: #fff;
             margin-bottom: 8px;
