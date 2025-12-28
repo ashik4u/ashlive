@@ -12,8 +12,24 @@
         .player-container { max-width: 900px; margin: 40px auto; background: #222; border-radius: 12px; box-shadow: 0 8px 32px #0008; padding: 24px; }
         .channel-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; }
         .program-info { font-size: 1rem; opacity: 0.8; margin-bottom: 16px; }
-        .video-wrap { background: #000; border-radius: 8px; overflow: hidden; }
-        #mainVideo { width: 100%; height: 60vh; background: #000; }
+        .video-wrap { 
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            background: #000;
+            border-radius: 8px;
+        }
+        #mainVideo { 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
         .quality-select { margin-top: 12px; }
     </style>
 </head>

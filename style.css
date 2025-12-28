@@ -152,10 +152,15 @@ a {
 
         /* Player Section */
         .player-section {
+            width: 100%;
+            max-width: 1240px;
+            overflow: hidden;
+            padding: 32px 24px;
+            box-sizing: border-box;
+            margin: 0 auto;
             background-color: var(--current-secondary);
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow: hidden;
             transition: all 0.3s ease;
             position: relative;
         }
@@ -168,10 +173,14 @@ a {
         /* Responsive Embed */
         .embed-container {
             position: relative;
-            padding-bottom: 56.25%;
+            width: 100%;
+            max-width: 1200px;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
             height: 0;
             overflow: hidden;
+            margin: 0 auto;
             background: #000;
+            border-radius: 16px;
         }
 
         .embed-container video {
