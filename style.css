@@ -175,12 +175,19 @@ a {
             position: relative;
             width: 100%;
             max-width: 1200px;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            height: 0;
+            aspect-ratio: 16 / 9;
             overflow: hidden;
             margin: 0 auto;
             background: #000;
             border-radius: 16px;
+        }
+
+        /* Fallback for browsers without aspect-ratio support */
+        @supports not (aspect-ratio: 16 / 9) {
+            .embed-container {
+                padding-bottom: 56.25%;
+                height: 0;
+            }
         }
 
         .embed-container video {
@@ -190,7 +197,8 @@ a {
             width: 100%;
             height: 100%;
             border: none;
-            display: block;
+            display: block !important;
+            visibility: visible !important;
             background: #000;
             border-radius: 0;
             margin: 0;
@@ -207,6 +215,28 @@ a {
             width: 100%;
             height: 100%;
             border: none;
+        }
+
+        /* Mobile media queries to ensure visibility */
+        @media (max-width: 900px) {
+            .embed-container {
+                min-height: 200px; /* Ensure minimum visible height */
+            }
+            
+            .player-section {
+                padding: 16px !important;
+            }
+            
+            .main-player-area {
+                height: auto !important;
+                min-height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .embed-container {
+                min-height: calc(100vw * 0.5625); /* 56.25% of viewport width */
+            }
         }
 
         /* Player Info */
