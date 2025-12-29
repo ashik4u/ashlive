@@ -1428,8 +1428,6 @@ a {
             padding-right: 6px;
         }
 
-        /* Search input spacing */
-        #channelSearch { margin-top: 8px; }
         /* Prefer Bootstrap sizing — subtle focus styles for the search control */
         .input-group-sm .form-control:focus {
             box-shadow: 0 0 0 0.12rem rgba(0,230,118,0.08);
@@ -1437,7 +1435,7 @@ a {
         }
         /* Place the clear (close) button inside the input */
         .search-input-wrap { position: relative; }
-        .search-input { padding-right: 44px; }
+        .search-input { padding-right: 22px; }
         .search-close-inside {
             position: absolute;
             right: 8px;
@@ -1459,6 +1457,78 @@ a {
             .search-input { padding-right: 40px; }
             .search-close-inside { right: 6px; width: 28px; height: 28px; }
         }
+        /* Style the left search icon to blend with the theme */
+        .search-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #cfd8dc;
+            font-size: 1.05rem;
+            padding: 0 8px 0 8px;
+        }
+        .search-input.ps-2 { padding-left: 0.6rem; }
+        /* Make the input and icon appear as a single rounded control */
+        .input-group .form-control {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+        .input-group .input-group-text {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+            border-right: none;
+            background: transparent;
+        }
+
+/* --- New search bar styling from user snippet --- */
+.search-container {
+    background-color: #ffffff;
+    border-radius: 40px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    padding: 8px;
+    width: 100%;
+    transition: all 0.12s ease;
+}
+.search-container:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+}
+.form-control.search-input {
+    border: none;
+    background: transparent;
+    padding-left: 6px;
+    font-size: 10px;
+    height: 12px;
+    line-height: 12px;
+}
+.form-control.search-input:focus {
+    box-shadow: none;
+    outline: none;
+}
+.btn-search {
+    background-color: #007bff;
+    color: white;
+    border-radius: 999px;
+    padding: 0 6px;
+    border: none;
+    transition: all 0.12s ease;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+.btn-search:hover {
+    background-color: #0056b3;
+    transform: none;
+}
+.search-icon {
+    color: #6c757d;
+}
+
+@media (max-width: 480px) {
+    .form-control.search-input { height: 28px; }
+    .btn-search { padding: 6px 12px; }
+}
         /* Make sure the close button in the input-group aligns vertically */
         .input-group .btn-close {
             margin: 0 6px 0 6px;
@@ -1556,10 +1626,6 @@ a {
 
         .channel-list-scroll {
             padding: 6px !important;
-        }
-
-        .channel-item {
-            margin: 4px 0 !important;
         }
 
         /* Make footer sit close to content without huge gap */

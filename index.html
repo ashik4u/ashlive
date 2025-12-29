@@ -45,11 +45,12 @@
                                     <small class="badge bg-success" id="channelCount">0/250</small>
                                 </div>
                                 <div class="px-2">
-                                    <div class="input-group input-group-sm">
-                                        <div class="search-input-wrap w-100">
-                                            <input id="channelSearch" class="form-control form-control-sm search-input" placeholder="Search channels..." aria-label="Search channels">
-                                            <button class="btn btn-close btn-close-white search-close-inside" type="button" id="channelSearchClear" aria-label="Clear search"></button>
-                                        </div>
+                                    <div class="search-container position-relative w-100">
+                                        <form id="channelSearchForm" class="d-flex align-items-center">
+                                            
+                                            <input id="channelSearch" class="form-control search-input ps-3" type="search" placeholder="Search channels..." aria-label="Search channels">
+                                            <button class="btn btn-search ms-2 btn-sm" type="submit" id="channelSearchBtn" aria-label="Search"><i class="fas fa-search"></i></button>
+                                        </form>
                                     </div>
                                 </div>
                                 <div class="channel-list-scroll">
@@ -349,14 +350,24 @@ fetch('https://iptv-org.github.io/iptv/categories/sports.m3u')
         renderChannelGrid(filtered, 'dynamicChannelGrid', 'channelCount', false, false);
     });
 
-    // Clear button for Sports search (reset + focus)
-    const searchClear = document.getElementById('channelSearchClear');
-    if (searchClear) {
-        searchClear.addEventListener('click', function() {
-            searchInput.value = '';
-            searchInput.focus();
-            // don't auto-select on clear
-            renderChannelGrid(loadedChannels, 'dynamicChannelGrid', 'channelCount', false, false);
+    // Sports search form submit (button)
+    const searchForm = document.getElementById('channelSearchForm');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const q = searchInput.value.trim().toLowerCase();
+            if (!q) {
+                renderChannelGrid(loadedChannels, 'dynamicChannelGrid', 'channelCount', false, false);
+                return;
+            }
+            const filtered = {};
+            Object.keys(loadedChannels || {}).forEach(k => {
+                const ch = loadedChannels[k];
+                const title = (ch.title || '').toLowerCase();
+                const program = (ch.program || '').toLowerCase();
+                if (title.includes(q) || program.includes(q)) filtered[k] = ch;
+            });
+            renderChannelGrid(filtered, 'dynamicChannelGrid', 'channelCount', false, false);
         });
     }
 
