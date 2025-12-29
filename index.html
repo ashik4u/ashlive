@@ -44,6 +44,14 @@
                                     <h5 class="mb-0">Sports</h5>
                                     <small class="badge bg-success" id="channelCount">0/250</small>
                                 </div>
+                                <div class="px-2">
+                                    <div class="input-group input-group-sm">
+                                        <div class="search-input-wrap w-100">
+                                            <input id="channelSearch" class="form-control form-control-sm search-input" placeholder="Search channels..." aria-label="Search channels">
+                                            <button class="btn btn-close btn-close-white search-close-inside" type="button" id="channelSearchClear" aria-label="Clear search"></button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="channel-list-scroll">
                                     <div class="row row-cols-1 g-2" id="dynamicChannelGrid"></div>
                                 </div>
@@ -53,6 +61,7 @@
                                     <h5 class="mb-0">Fancode</h5>
                                     <small class="badge bg-secondary" id="externalChannelCount">0</small>
                                 </div>
+                                <!-- external search removed per request -->
                                 <div class="channel-list-scroll">
                                     <div class="row row-cols-1 g-2" id="externalChannelGrid"></div>
                                 </div>
@@ -177,7 +186,7 @@
                 // Removed update of non-existent extra info section
             }
 
-            function renderChannelGrid(channels, gridId, countId, isExternal) {
+            function renderChannelGrid(channels, gridId, countId, isExternal, autoSelectFirst = true) {
                 const grid = document.getElementById(gridId);
                 if (!grid) return;
                 grid.innerHTML = '';
@@ -197,7 +206,7 @@
                 }
                 const countElem = document.getElementById(countId);
                 if (countElem) {
-                    countElem.textContent = isExternal ? channelCount : (channelCount + '/250');
+                    countElem.textContent = isExternal ? channelCount : (channelCount + '');
                 }
                 if (channelCount === 0) {
                     grid.innerHTML = '<div style="color:#fff;text-align:center;padding:20px;">No channels found.</div>';
@@ -265,7 +274,7 @@
                     col.appendChild(item);
                     grid.appendChild(col);
 
-                    if (first && !isExternal) {
+                    if (first && !isExternal && autoSelectFirst) {
                         setPlayer(key);
                     }
                     first = false;
@@ -317,6 +326,42 @@ fetch('https://iptv-org.github.io/iptv/categories/sports.m3u')
         const countElem = document.getElementById('channelCount');
         if (countElem) countElem.textContent = '0/250';
     });
+
+        // Wire up search for Sports tab (filters loadedChannels)
+        document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('channelSearch');
+    if (!searchInput) return;
+    searchInput.addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        if (!q) {
+            // when clearing search don't auto-select/play a channel
+            renderChannelGrid(loadedChannels, 'dynamicChannelGrid', 'channelCount', false, false);
+            return;
+        }
+        const filtered = {};
+        Object.keys(loadedChannels || {}).forEach(k => {
+            const ch = loadedChannels[k];
+            const title = (ch.title || '').toLowerCase();
+            const program = (ch.program || '').toLowerCase();
+            if (title.includes(q) || program.includes(q)) filtered[k] = ch;
+        });
+        // When searching, only update the list — do not change the currently playing channel
+        renderChannelGrid(filtered, 'dynamicChannelGrid', 'channelCount', false, false);
+    });
+
+    // Clear button for Sports search (reset + focus)
+    const searchClear = document.getElementById('channelSearchClear');
+    if (searchClear) {
+        searchClear.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.focus();
+            // don't auto-select on clear
+            renderChannelGrid(loadedChannels, 'dynamicChannelGrid', 'channelCount', false, false);
+        });
+    }
+
+    // External search removed — no input listener
+});
 
             // Load external channels
             fetch('https://raw.githubusercontent.com/IPTVFlixBD/Fancode-BD/refs/heads/main/data.json')

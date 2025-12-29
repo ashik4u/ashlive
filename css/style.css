@@ -1427,6 +1427,43 @@ a {
             overflow-x: hidden;
             padding-right: 6px;
         }
+
+        /* Search input spacing */
+        #channelSearch { margin-top: 8px; }
+        /* Prefer Bootstrap sizing — subtle focus styles for the search control */
+        .input-group-sm .form-control:focus {
+            box-shadow: 0 0 0 0.12rem rgba(0,230,118,0.08);
+            border-color: #00e676;
+        }
+        /* Place the clear (close) button inside the input */
+        .search-input-wrap { position: relative; }
+        .search-input { padding-right: 44px; }
+        .search-close-inside {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 6;
+            background: transparent;
+            border: none;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.95;
+        }
+        .search-close-inside:focus { outline: none; box-shadow: none; }
+        /* Slightly nudge for very small screens */
+        @media (max-width: 480px) {
+            .search-input { padding-right: 40px; }
+            .search-close-inside { right: 6px; width: 28px; height: 28px; }
+        }
+        /* Make sure the close button in the input-group aligns vertically */
+        .input-group .btn-close {
+            margin: 0 6px 0 6px;
+            align-self: center;
+        }
         .channel-list-scroll .row {
             margin: 0;
         }
