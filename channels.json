@@ -14,9 +14,4 @@
     "program": "Cricket",
     "src": "https://cdn4.skygo.mn/live/disk1/SPSPrime/HLSv3-FTA/SPSPrime.m3u8"
   },
-  "Cricket4": {
-    "title": "Ten Cricket",
-    "program": "Cricket",
-    "src": "https://iptv-org.github.io/api/streams.json"
-  }
 }
