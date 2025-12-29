@@ -17,11 +17,6 @@
     <!-- Animated Background -->
     <div class="background"></div>
 
-    <!-- Theme Toggle -->
-    <div class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon"></i>
-    </div>
-
     <!-- Rebuilt layout: Bootstrap side-by-side channels + player -->
     <div class="container my-4">
         <div class="row gx-4">
@@ -35,6 +30,9 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="external-tab" data-bs-toggle="tab" data-bs-target="#external" type="button" role="tab" aria-controls="external" aria-selected="false">Fancode</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="sky-tab" data-bs-toggle="tab" data-bs-target="#sky" type="button" role="tab" aria-controls="sky" aria-selected="false">Sky UK &amp; NZ</button>
                             </li>
                         </ul>
 
@@ -65,6 +63,15 @@
                                 <!-- external search removed per request -->
                                 <div class="channel-list-scroll">
                                     <div class="row row-cols-1 g-2" id="externalChannelGrid"></div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="sky" role="tabpanel" aria-labelledby="sky-tab">
+                                <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+                                    <h5 class="mb-0">Sky UK &amp; NZ</h5>
+                                    <small class="badge bg-secondary" id="skyChannelCount">0</small>
+                                </div>
+                                <div class="channel-list-scroll">
+                                    <div class="row row-cols-1 g-2" id="skyChannelGrid"></div>
                                 </div>
                             </div>
                         </div>
@@ -109,7 +116,15 @@
         // Ensure changeChannel is globally defined
         function changeChannel(event) {
             const streamId = event.currentTarget.dataset.streamId;
-            setPlayer(streamId);
+            // Try primary channels, then sky channels
+            if (loadedChannels && loadedChannels[streamId]) {
+                setPlayer(streamId);
+            } else if (loadedSkyChannels && loadedSkyChannels[streamId]) {
+                setPlayerSky(streamId);
+            } else {
+                // fallback: attempt to call setPlayer (may be external)
+                try { setPlayer(streamId); } catch (e) { console.warn('No handler for', streamId); }
+            }
             // Update active channel in the list
             const items = document.querySelectorAll('.channel-item');
             items.forEach(item => item.classList.remove('active'));
@@ -127,6 +142,7 @@
             // Global variable to store loaded channels
             let loadedChannels = {};
             let loadedExternalChannels = {};
+                        let loadedSkyChannels = {};
 
             // Set video player using loadedChannels
             let hlsInstance = null;
@@ -185,6 +201,58 @@
                 document.getElementById('mainChannelTitle').textContent = channel.title;
                 document.getElementById('mainProgramInfo').textContent = channel.program;
                 // Removed update of non-existent extra info section
+            }
+
+            // Player helper for Sky channels (same behavior as setPlayer but using loadedSkyChannels)
+            function setPlayerSky(streamId) {
+                if (!loadedSkyChannels || !loadedSkyChannels[streamId]) return;
+                const channel = loadedSkyChannels[streamId];
+                const video = document.getElementById('mainVideo');
+                const qualitySelect = document.getElementById('qualitySelect');
+                let src = channel.src;
+                if (hlsInstance) {
+                    hlsInstance.destroy();
+                    hlsInstance = null;
+                }
+                qualitySelect.style.display = 'none';
+                if (src && src.endsWith('.m3u8')) {
+                    if (Hls.isSupported()) {
+                        hlsInstance = new Hls();
+                        hlsInstance.loadSource(src);
+                        hlsInstance.attachMedia(video);
+                        hlsInstance.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
+                            qualitySelect.innerHTML = '';
+                            const levels = hlsInstance.levels;
+                            const autoOpt = document.createElement('option');
+                            autoOpt.value = '-1';
+                            autoOpt.textContent = 'Auto';
+                            qualitySelect.appendChild(autoOpt);
+                            levels.forEach((level, i) => {
+                                const opt = document.createElement('option');
+                                opt.value = i;
+                                let label = '';
+                                if (level.height) label = level.height + 'p';
+                                else if (level.bitrate) label = Math.round(level.bitrate/1000) + 'kbps';
+                                else label = 'Quality ' + (i+1);
+                                opt.textContent = label;
+                                qualitySelect.appendChild(opt);
+                            });
+                            qualitySelect.style.display = '';
+                            qualitySelect.value = '-1';
+                            qualitySelect.onchange = function() {
+                                hlsInstance.currentLevel = parseInt(this.value, 10);
+                            };
+                        });
+                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        video.src = src;
+                    } else {
+                        video.src = src;
+                    }
+                } else {
+                    video.src = src;
+                }
+                document.getElementById('mainChannelTitle').textContent = channel.title;
+                document.getElementById('mainProgramInfo').textContent = channel.program || '';
             }
 
             function renderChannelGrid(channels, gridId, countId, isExternal, autoSelectFirst = true) {
@@ -328,6 +396,46 @@ fetch('https://iptv-org.github.io/iptv/categories/sports.m3u')
         if (countElem) countElem.textContent = '0/250';
     });
 
+    // Load Sky UK & NZ M3U and render in its tab
+    fetch('https://raw.githubusercontent.com/ashik4u/m3u/refs/heads/main/sky-uk-nz.m3u')
+        .then(response => response.text())
+        .then(m3u => {
+            const lines = m3u.split(/\r?\n/);
+            let channels = {};
+            let current = null;
+            let idx = 0;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                if (line.startsWith('#EXTINF')) {
+                    const tvgLogoMatch = line.match(/tvg-logo="([^"]*)"/);
+                    const groupTitleMatch = line.match(/group-title="([^"]*)"/);
+                    const nameMatch = line.match(/,(.*)$/);
+                    const title = nameMatch ? nameMatch[1].replace(/\s*\(.*\)$/, '') : 'Unknown';
+                    current = {
+                        title: title || 'Unknown',
+                        group: groupTitleMatch ? groupTitleMatch[1] : '',
+                        logo: tvgLogoMatch ? tvgLogoMatch[1] : 'https://placehold.co/420x300/000000/ffffff?text=LIVE%20TV',
+                    };
+                } else if (current && line && !line.startsWith('#')) {
+                    channels['sky' + idx] = {
+                        title: current.title,
+                        group: current.group,
+                        logo: current.logo,
+                        src: line
+                    };
+                    idx++;
+                    current = null;
+                }
+            }
+            loadedSkyChannels = channels;
+            renderChannelGrid(loadedSkyChannels, 'skyChannelGrid', 'skyChannelCount', false);
+        })
+        .catch(err => {
+            console.error('Error loading sky-uk-nz.m3u:', err);
+            const countElem = document.getElementById('skyChannelCount');
+            if (countElem) countElem.textContent = '0';
+        });
+
         // Wire up search for Sports tab (filters loadedChannels)
         document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('channelSearch');
@@ -448,25 +556,6 @@ fetch('https://iptv-org.github.io/iptv/categories/sports.m3u')
             }
         </script>
     <script>
-        // Theme Toggle Functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
-        // Check for saved theme preference or use preferred color scheme
-        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-        if (savedTheme === 'light') {
-            body.classList.add('light-theme');
-            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-        }
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('light-theme');
-            const isLight = body.classList.contains('light-theme');
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            themeToggle.innerHTML = isLight ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-        });
-
-        // Use loadedChannels from channels.json
-        // (Removed duplicate hlsInstance, setPlayer, and changeChannel definitions)
-
         // Keyboard Shortcuts
         document.addEventListener('keydown', function(e) {
             const items = document.querySelectorAll('.channel-item');
