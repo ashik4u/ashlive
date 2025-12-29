@@ -142,16 +142,50 @@
             // Global variable to store loaded channels
             let loadedChannels = {};
             let loadedExternalChannels = {};
-                        let loadedSkyChannels = {};
+            let loadedSkyChannels = {};
 
             // Set video player using loadedChannels
             let hlsInstance = null;
-            function setPlayer(streamId) {
+
+            // Probe a URL to see if it's reachable from the browser (HEAD request).
+            async function probeUrl(url) {
+                try {
+                    const res = await fetch(url, { method: 'HEAD', cache: 'no-cache', mode: 'cors' });
+                    // If fetch succeeds (even opaque) consider it reachable
+                    return (res && (res.ok || res.type === 'opaque'));
+                } catch (err) {
+                    console.warn('probeUrl failed for', url, err);
+                    return false;
+                }
+            }
+
+            // Resolve a playable src: try original, then fallback to http if https fails.
+            async function resolvePlayableSrc(src) {
+                if (!src) return src;
+                // First try original URL
+                const ok = await probeUrl(src);
+                if (ok) return src;
+                // If original was https, try http fallback
+                if (src.startsWith('https:')) {
+                    const httpSrc = src.replace(/^https:/i, 'http:');
+                    const ok2 = await probeUrl(httpSrc);
+                    if (ok2) {
+                        console.info('Falling back to HTTP for', src, '->', httpSrc);
+                        return httpSrc;
+                    }
+                }
+                console.warn('No reachable variant for', src);
+                return src;
+            }
+
+            async function setPlayer(streamId) {
                 if (!loadedChannels || !loadedChannels[streamId]) return;
                 const channel = loadedChannels[streamId];
                 const video = document.getElementById('mainVideo');
                 const qualitySelect = document.getElementById('qualitySelect');
                 let src = channel.src;
+                // Attempt to resolve reachable variant (https -> http fallback)
+                try { src = await resolvePlayableSrc(src); } catch (e) { console.warn('resolvePlayableSrc error', e); }
                 // Clean up previous hls.js instance
                 if (hlsInstance) {
                     hlsInstance.destroy();
@@ -204,12 +238,13 @@
             }
 
             // Player helper for Sky channels (same behavior as setPlayer but using loadedSkyChannels)
-            function setPlayerSky(streamId) {
+            async function setPlayerSky(streamId) {
                 if (!loadedSkyChannels || !loadedSkyChannels[streamId]) return;
                 const channel = loadedSkyChannels[streamId];
                 const video = document.getElementById('mainVideo');
                 const qualitySelect = document.getElementById('qualitySelect');
                 let src = channel.src;
+                try { src = await resolvePlayableSrc(src); } catch (e) { console.warn('resolvePlayableSrc error', e); }
                 if (hlsInstance) {
                     hlsInstance.destroy();
                     hlsInstance = null;
@@ -417,11 +452,16 @@ fetch('https://iptv-org.github.io/iptv/categories/sports.m3u')
                         logo: tvgLogoMatch ? tvgLogoMatch[1] : 'https://placehold.co/420x300/000000/ffffff?text=LIVE%20TV',
                     };
                 } else if (current && line && !line.startsWith('#')) {
+                    // Force Sky feed links to use http scheme to avoid HTTPS/TLS issues
+                    let srcUrl = line;
+                    if (typeof srcUrl === 'string' && srcUrl.match(/^https:/i)) {
+                        srcUrl = srcUrl.replace(/^https:/i, 'http:');
+                    }
                     channels['sky' + idx] = {
                         title: current.title,
                         group: current.group,
                         logo: current.logo,
-                        src: line
+                        src: srcUrl
                     };
                     idx++;
                     current = null;
