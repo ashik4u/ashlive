@@ -34,7 +34,9 @@ body {
     display: flex;
     flex-direction: column;
     padding: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     height: 100%;
 }
 .main-player-area {
@@ -115,6 +117,8 @@ html, body {
     box-shadow: 2px 0 24px #00e67611;
     padding: 0 0 0 0;
     overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     height: 100vh !important;
     position: relative;
     top: 0;
@@ -301,8 +305,10 @@ html, body {
                     cursor: pointer;
                     transition: background 0.2s, box-shadow 0.2s, border 0.2s;
                     border: 2px solid transparent;
-                    min-width: 140px;
-                    max-width: 180px;
+                    width: 100%;
+                    min-width: 0;
+                    box-sizing: border-box;
+                    overflow: hidden;
                     margin-left: auto;
                     margin-right: auto;
                 }
@@ -487,8 +493,10 @@ html, body {
                     cursor: pointer;
                     transition: background 0.2s, box-shadow 0.2s, border 0.2s;
                     border: 2px solid transparent;
-                    min-width: 140px;
-                    max-width: 180px;
+                    width: 100%;
+                    min-width: 0;
+                    box-sizing: border-box;
+                    overflow: hidden;
                     margin-left: auto;
                     margin-right: auto;
                 }
@@ -636,8 +644,10 @@ html, body {
                     margin-right: 0;
                 }
                 .channel-item {
-                    min-width: 140px;
-                    max-width: 180px;
+                    width: 100%;
+                    min-width: 0;
+                    box-sizing: border-box;
+                    overflow: hidden;
                     margin-left: auto;
                     margin-right: auto;
                 }
@@ -708,6 +718,10 @@ html, body {
                     cursor: pointer;
                     transition: background 0.2s, box-shadow 0.2s;
                     border: 2px solid transparent;
+                    width: 100%;
+                    min-width: 0;
+                    box-sizing: border-box;
+                    overflow: hidden;
                 }
                 .channel-item.active, .channel-item:hover {
                     background: #00e6e6;
@@ -798,8 +812,9 @@ html, body {
                 /* --- CLEAN CHANNEL GRID FIX --- */
                 .channel-grid {
                     display: grid !important;
-                    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+                    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
                     gap: 12px !important;
+                    padding: 8px !important;
                     margin-top: 10px !important;
                 }
                 .channel-item {
@@ -813,8 +828,9 @@ html, body {
                     overflow: hidden !important;
                     padding: 8px 4px 10px 4px !important;
                     transition: box-shadow 0.2s, border 0.2s !important;
+                    width: 100% !important;
                     min-width: 0 !important;
-                    max-width: 180px !important;
+                    box-sizing: border-box !important;
                     margin: 0 auto !important;
                 }
                 .channel-item.active {
@@ -857,15 +873,16 @@ html, body {
                 /* --- GUARANTEED MULTI-COLUMN CHANNEL GRID BELOW PLAYER --- */
                 .channel-grid {
                     display: grid !important;
-                    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
-                    gap: 10px !important;
+                    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+                    gap: 12px !important;
+                    padding: 8px !important;
                     margin-top: 10px !important;
                 }
                 .channel-item {
                     width: 100% !important;
-                    max-width: 140px !important;
-                    min-width: 100px !important;
+                    min-width: 0 !important;
                     box-sizing: border-box !important;
+                    overflow: hidden !important;
                     margin: 0 auto !important;
                     padding: 6px 4px 8px 4px !important;
                     background: rgba(30,30,30,0.95) !important;
@@ -915,15 +932,17 @@ html, body {
                 .channel-grid {
                     display: flex !important;
                     flex-wrap: wrap !important;
-                    gap: 10px !important;
+                    gap: 12px !important;
+                    padding: 8px !important;
                     margin-top: 10px !important;
                     justify-content: flex-start !important;
                 }
                 .channel-item {
-                    min-width: 100px !important;
-                    max-width: 140px !important;
-                    flex: 0 1 120px !important;
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    flex: 0 1 140px !important;
                     box-sizing: border-box !important;
+                    overflow: hidden !important;
                     margin: 0 !important;
                     padding: 6px 4px 8px 4px !important;
                     background: rgba(30,30,30,0.95) !important;
