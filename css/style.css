@@ -1598,10 +1598,28 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 12px;
     box-shadow: 0 -6px 24px rgba(0,0,0,0.45);
 }
 @media (max-width: 576px) {
     :root { --footer-height: 88px; }
     body { padding-bottom: var(--footer-height); }
     .footer { height: var(--footer-height); padding-top: 10px; padding-bottom: 14px; }
+}
+
+/* Footer content tweaks */
+.footer img {
+    height: 28px;
+    width: auto;
+    display: block;
+}
+.footer .mt-2 { margin-top: 0 !important; }
+
+@media (max-width: 576px) {
+    .footer { flex-direction: column; gap: 8px; padding: 10px 12px; }
+}
+
+/* Override muted text color to requested blue */
+.text-muted {
+    color: #0d6efd !important;
 }
