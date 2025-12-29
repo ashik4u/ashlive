@@ -22,57 +22,65 @@
         <i class="fas fa-moon"></i>
     </div>
 
-    <!-- Node-Cast TV style layout: sidebar + main -->
-    <div class="main-flex-layout">
-        <!-- Sidebar: Channel List -->
-        <aside class="sidebar-channel-list">
-            <div class="channel-list">
-                <ul class="nav nav-tabs" id="channelTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="local-tab" data-bs-toggle="tab" data-bs-target="#local" type="button" role="tab" aria-controls="local" aria-selected="true">Sports</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="external-tab" data-bs-toggle="tab" data-bs-target="#external" type="button" role="tab" aria-controls="external" aria-selected="false">Fancode</button>
-                    </li>
-                </ul>
-                <div class="tab-content" id="channelTabsContent" style="margin-top:10px;">
-                    <div class="tab-pane fade show active" id="local" role="tabpanel" aria-labelledby="local-tab">
-                        <div class="channel-list-header">
-                            <h2 class="channel-list-title">Sports</h2>
-                            <div class="channel-count" id="channelCount">0/250</div>
-                        </div>
-                        <div class="channel-grid">
-                            <div id="dynamicChannelGrid"></div>
+    <!-- Rebuilt layout: Bootstrap side-by-side channels + player -->
+    <div class="container my-4">
+        <div class="row gx-4">
+            <!-- Channels sidebar -->
+            <aside class="col-12 col-md-4 order-2 order-md-1">
+                <div class="card bg-dark text-light">
+                    <div class="card-body p-2">
+                        <ul class="nav nav-tabs" id="channelTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="local-tab" data-bs-toggle="tab" data-bs-target="#local" type="button" role="tab" aria-controls="local" aria-selected="true">Sports</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="external-tab" data-bs-toggle="tab" data-bs-target="#external" type="button" role="tab" aria-controls="external" aria-selected="false">Fancode</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content mt-2" id="channelTabsContent">
+                            <div class="tab-pane fade show active" id="local" role="tabpanel" aria-labelledby="local-tab">
+                                <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+                                    <h5 class="mb-0">Sports</h5>
+                                    <small class="badge bg-success" id="channelCount">0/250</small>
+                                </div>
+                                <div class="channel-list-scroll">
+                                    <div class="row row-cols-1 g-2" id="dynamicChannelGrid"></div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="external" role="tabpanel" aria-labelledby="external-tab">
+                                <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+                                    <h5 class="mb-0">Fancode</h5>
+                                    <small class="badge bg-secondary" id="externalChannelCount">0</small>
+                                </div>
+                                <div class="channel-list-scroll">
+                                    <div class="row row-cols-1 g-2" id="externalChannelGrid"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="external" role="tabpanel" aria-labelledby="external-tab">
-                        <div class="channel-list-header">
-                            <h2 class="channel-list-title">Fancode</h2>
-                            <div class="channel-count" id="externalChannelCount">0</div>
+                </div>
+            </aside>
+
+            <!-- Player area -->
+            <main class="col-12 col-md-8 order-1 order-md-2">
+                <div class="card bg-dark text-light">
+                    <div class="card-body">
+                        <div class="embed-responsive bg-black mb-3">
+                            <video id="mainVideo" controls autoplay class="w-100" playsinline></video>
                         </div>
-                        <div class="channel-grid">
-                            <div id="externalChannelGrid"></div>
+                        <div class="player-info text-center">
+                            <div class="channel-title h6 mb-1" id="mainChannelTitle">Sports Channel 1</div>
+                            <div class="program-info small mb-2" id="mainProgramInfo">Live: Premier League Football</div>
+                            <div class="d-inline-block">
+                                <label for="qualitySelect" class="me-2" style="opacity:0.85;">Quality:</label>
+                                <select id="qualitySelect" class="form-select d-inline-block" style="width:auto;min-width:120px;"></select>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </aside>
-        <!-- Main: Player -->
-        <main class="main-player-area">
-            <div class="player-section">
-                <div class="embed-container">
-                    <video id="mainVideo" controls autoplay></video>
-                </div>
-                <div class="player-info">
-                    <div class="channel-title" id="mainChannelTitle">Sports Channel 1</div>
-                    <div class="program-info" id="mainProgramInfo">Live: Premier League Football</div>
-                    <div style="margin-top:8px;">
-                        <label for="qualitySelect" style="font-size:0.95em;opacity:0.8;">Quality:</label>
-                        <select id="qualitySelect" style="margin-left:6px;padding:2px 8px;border-radius:6px;font-size:0.95em;"></select>
-                    </div>
-                </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -195,11 +203,10 @@
                     grid.innerHTML = '<div style="color:#fff;text-align:center;padding:20px;">No channels found.</div>';
                     return;
                 }
-                // Bootstrap row
-                const row = document.createElement('div');
-                row.className = 'row';
+
                 let first = true;
                 let idx = 0;
+                // grid is expected to be a Bootstrap .row container; append .col children
                 for (const id of channelKeys) {
                     let ch, channelName, logo, thumb, programInfo;
                     let key = id;
@@ -218,34 +225,52 @@
                         logo = ch.logo ? ch.logo : `https://placehold.co/420x300/000000/ffffff?text=LIVE%20TV`;
                         thumb = logo;
                     }
-                    const active = first && !isExternal ? 'active' : '';
+
+                    // create column wrapper
                     const col = document.createElement('div');
-                    col.className = `col-6 col-sm-4 col-md-3 col-lg-3 col-xl-2 mb-3`;
-                    const div = document.createElement('div');
-                    div.className = `channel-item ${active}`;
-                    div.setAttribute('tabindex', idx+1);
-                    div.dataset.streamId = key;
-                    div.onclick = function(event) {
-                        if (isExternal) {
-                            setPlayerExternal(key);
-                        } else {
-                            changeChannel(event);
-                        }
+                    col.className = 'col';
+
+                    // channel card (compact)
+                    const item = document.createElement('div');
+                    item.className = 'channel-item d-flex align-items-center';
+                    item.setAttribute('tabindex', idx + 1);
+                    item.dataset.streamId = key;
+                    item.onclick = function(event) {
+                        if (isExternal) setPlayerExternal(key);
+                        else changeChannel(event);
                     };
-                    div.innerHTML = `
-                        <img src="${thumb}" class="channel-thumbnail" alt="${channelName}">
-                        <div class="channel-name">${channelName}</div>
-                        ${isExternal && programInfo ? `<div style='font-size:0.8em;opacity:0.7;text-align:center;'>${programInfo}</div>` : ''}
-                    `;
-                    col.appendChild(div);
-                    row.appendChild(col);
+
+                    // thumbnail
+                    const img = document.createElement('img');
+                    img.src = thumb;
+                    img.alt = channelName;
+                    img.className = 'channel-thumbnail me-2';
+
+                    // name
+                    const name = document.createElement('div');
+                    name.className = 'channel-name flex-grow-1';
+                    name.textContent = channelName;
+
+                    item.appendChild(img);
+                    item.appendChild(name);
+
+                    if (isExternal && programInfo) {
+                        const meta = document.createElement('div');
+                        meta.className = 'text-muted small';
+                        meta.style.fontSize = '0.75rem';
+                        meta.textContent = programInfo;
+                        item.appendChild(meta);
+                    }
+
+                    col.appendChild(item);
+                    grid.appendChild(col);
+
                     if (first && !isExternal) {
                         setPlayer(key);
                     }
                     first = false;
                     idx++;
                 }
-                grid.appendChild(row);
             }
 
             // Load channels and streams from iptv-org/api and filter for T Sports and Ten Cricket
